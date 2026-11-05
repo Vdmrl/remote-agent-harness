@@ -67,14 +67,18 @@ def provision(body: dict, x_owner: str = Header(default="")):
             sid = provisions[key]
             if sessions[sid]["fingerprint"] != fingerprint:
                 raise HTTPException(409, "provision request_id conflict")
-            return {"version": "0", "session_id": sid}
-        if len(sessions) >= 128:
-            raise HTTPException(429, "checkpoint session capacity reached; restart after releasing sessions")
-        sid = uuid.uuid4().hex
-        remote(SANDBOX + "/v0/sessions", "POST", {"session_id": sid, "files": body.get("files", {})})
-        sessions[sid] = {"owner": x_owner, "fingerprint": fingerprint, "events": [], "operations": {}, "result": None, "cancelled": False, "released": False}
-        if rid:
-            provisions[key] = sid
+        else:
+            if len(sessions) >= 128:
+                raise HTTPException(429, "checkpoint session capacity reached; restart after releasing sessions")
+            sid = uuid.uuid4().hex
+            sessions[sid] = {"owner": x_owner, "fingerprint": fingerprint, "events": [], "operations": {}, "result": None, "cancelled": False, "released": False, "provisioned": False}
+            if rid:
+                provisions[key] = sid
+        s = sessions[sid]
+        if not s["provisioned"]:
+            # Retain the reserved ID after an ambiguous response; retry only this identity.
+            remote(SANDBOX + "/v0/sessions", "POST", {"session_id": sid, "files": body.get("files", {})})
+            s["provisioned"] = True
     return {"version": "0", "session_id": sid}
 
 
@@ -189,11 +193,13 @@ def events(sid: str, after: int = 0, last_event_id: str = Header(default=""), x_
         nonlocal cursor
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
-            pending = list(s["events"][cursor:])
+            with lock:
+                pending = list(s["events"][cursor:])
+                running = any(op["state"] == "running" for op in s["operations"].values())
             for event in pending:
                 cursor = event["id"]
                 yield f"id: {cursor}\nevent: {event['type']}\ndata: {json.dumps(event)}\n\n"
-            if not any(op["state"] == "running" for op in s["operations"].values()):
+            if not running:
                 return
             time.sleep(0.1)
     return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})

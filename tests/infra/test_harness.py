@@ -1,9 +1,11 @@
 import json
+import asyncio
 import threading
 import time
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi import HTTPException
 from rah import harness, llm_proxy
 from rah.protocol import decision
 
@@ -84,3 +86,49 @@ def test_exec_completion_cannot_win_after_cancel_requested():
     harness.finish(s, op, {"outcome": "cancelled", "error": {"type": "cancelled", "message": "removed"}})
     assert op["result"]["outcome"] == "cancelled"
     assert len(s["events"]) == 1
+
+
+def test_provision_retry_recovers_reserved_identity_after_lost_response(monkeypatch):
+    monkeypatch.setattr(harness, "sessions", {})
+    monkeypatch.setattr(harness, "provisions", {})
+    containers, calls = {}, []
+    def upstream(url, method, body):
+        sid = body["session_id"]
+        assert harness.provisions[("owner", "seed")] == sid
+        assert sid in harness.sessions
+        containers.setdefault(sid, body["files"])
+        calls.append(body)
+        if len(calls) == 1:
+            raise HTTPException(502, "successful manager response lost")
+        return {"session_id": sid}
+    monkeypatch.setattr(harness, "remote", upstream)
+    body = {"request_id": "seed", "files": {"input": "aGVsbG8="}}
+    with pytest.raises(HTTPException):
+        harness.provision(body, "owner")
+    sid = next(iter(containers))
+    assert not harness.sessions[sid]["provisioned"]
+    assert harness.provision(body, "owner")["session_id"] == sid
+    assert harness.provision(body, "owner")["session_id"] == sid
+    assert len(calls) == 2 and calls[0] == calls[1]
+    assert list(containers) == list(harness.sessions) == [sid]
+    assert harness.sessions[sid]["provisioned"]
+    with pytest.raises(HTTPException) as caught:
+        harness.provision({**body, "files": {}}, "owner")
+    assert caught.value.status_code == 409 and len(calls) == 2
+
+
+def test_sse_drains_terminal_event_when_finish_occurs_during_yield(monkeypatch):
+    op = {"request_id": "one", "state": "running"}
+    s = {"owner": "owner", "events": [], "operations": {"one": op}, "cancelled": False, "result": None}
+    monkeypatch.setattr(harness, "sessions", {"session": s})
+    harness.emit(s, "started", {"request_id": "one"})
+    response = harness.events("session", after=0, last_event_id="", x_owner="owner")
+    async def consume():
+        chunks = [await anext(response.body_iterator)]
+        # The stream has copied its pending events and is paused while sending one.
+        harness.finish(s, op, {"outcome": "completed"})
+        chunks.extend([chunk async for chunk in response.body_iterator])
+        return "".join(chunks)
+    output = asyncio.run(consume())
+    assert "event: started" in output
+    assert "event: result" in output and "id: 2\n" in output

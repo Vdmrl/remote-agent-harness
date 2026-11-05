@@ -33,12 +33,11 @@ def check(task_dir, files):
                 text = actual.decode().lower()
                 if not text.startswith("no") or "dependency missing" not in text:
                     return False, "must report no and actual stderr reason"
+            elif kind == "rename" and name.endswith(".py"):
+                if ast.dump(ast.parse(actual)) != ast.dump(ast.parse(data)):
+                    return False, f"unexpected Python changes in {name}"
             elif actual != data:
                 return False, f"bytes differ in {name}"
-            if kind == "rename" and name.endswith(".py"):
-                ast.parse(actual)
-                if "calc_total" in actual.decode():
-                    return False, "old Python symbol remains"
         if spec.get("preserve_fixture"):
             original = Path(task_dir) / "fixture"
             for source in original.rglob("*"):

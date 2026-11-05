@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "remote-agent-harness"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["fastapi==0.121.0", "uvicorn==0.38.0", "httpx==0.28.1", "docker==7.1.0", "PyYAML==6.0.3", "jsonschema==4.25.1"]
+
+[dependency-groups]
+dev = ["pytest==8.4.2"]
+
+[project.scripts]
+rah = "rah.client:main"
+rah-baf = "rah.baf:main"
+rah-codex-bridge = "rah.codex_bridge:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rah"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["docker: opt-in live Docker integration"]
+addopts = "-m 'not docker'"

@@ -1,2 +1,12 @@
 .env
+.env.*
+!.env.example
+.venv/
 __pycache__/
+*.pyc
+.pytest_cache/
+results/
+dist/
+*.egg-info/
+_bmad/
+_bmad-output/

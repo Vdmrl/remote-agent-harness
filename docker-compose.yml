@@ -1,36 +1,62 @@
-# Заготовка. Все собственные сервисы собираются из исходников (build), базовые образы — с закреплённой версией.
-# Как сандбокс-менеджер запускает сандбоксы (Docker socket / rootless / sysbox / gVisor) — решение в ADR.
+x-runtime: &runtime
+  build: {context: ., target: runtime}
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: [/tmp:size=16m,mode=1777]
+  mem_limit: 512m
+  pids_limit: 128
+  healthcheck:
+    test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+    interval: 5s
+    timeout: 3s
+    retries: 20
 
 services:
   gateway:
-    build: ./services/gateway
-    env_file: .env
-    ports: ["${GATEWAY_PORT:-8080}:8080"]
-    depends_on: [harness]
-    healthcheck: {test: ["CMD", "true"], interval: 10s}   # заменить на реальную проверку
-
-  harness:
-    build: ./services/harness
+    <<: *runtime
+    ports: ["${GATEWAY_BIND:-127.0.0.1}:${GATEWAY_PORT:-8080}:8000"]
     environment:
-      LLM_URL: http://llm-proxy:8000      # харнес ходит в модель только через прокси
-    depends_on: [llm-proxy, sandbox-manager]
-    healthcheck: {test: ["CMD", "true"], interval: 10s}
-
+      RAH_TOKEN: ${RAH_TOKEN:?set RAH_TOKEN in .env}
+      CLIENT_TOKENS: ${CLIENT_TOKENS:-}
+      HARNESS_URL: http://harness:8000
+    depends_on:
+      harness: {condition: service_healthy}
+  harness:
+    <<: *runtime
+    command: [uvicorn, rah.harness:app, --host, 0.0.0.0, --port, "8000", --no-access-log]
+    environment:
+      RAH_TOKEN: ${RAH_TOKEN}
+      SANDBOX_URL: http://sandbox-manager:8000
+      LLM_URL: http://llm-proxy:8000
+    depends_on:
+      sandbox-manager: {condition: service_healthy}
+      llm-proxy: {condition: service_healthy}
   sandbox-manager:
-    build: ./services/sandbox-manager
-    env_file: .env
-    # volumes / privileges — по ADR о способе запуска сандбоксов
-    healthcheck: {test: ["CMD", "true"], interval: 10s}
-
+    <<: *runtime
+    user: "0:0"
+    command: [uvicorn, rah.sandbox:app, --host, 0.0.0.0, --port, "8000", --no-access-log]
+    environment:
+      RAH_TOKEN: ${RAH_TOKEN}
+      SANDBOX_IMAGE: remote-agent-harness-sandbox:0.1.0
+    volumes: [/var/run/docker.sock:/var/run/docker.sock]
+    depends_on:
+      sandbox-image: {condition: service_completed_successfully}
   llm-proxy:
-    build: ./services/llm-proxy
-    env_file: .env                         # ключ только здесь
-    healthcheck: {test: ["CMD", "true"], interval: 10s}
-
-  # Тестовые сервисы для инфраструктурных тестов: docker compose --profile test up
-  allowed-http:
-    profiles: [test]
-    image: nginx:1.27-alpine
-  blocked-http:
-    profiles: [test]
-    image: nginx:1.27-alpine
+    <<: *runtime
+    command: [uvicorn, rah.llm_proxy:app, --host, 0.0.0.0, --port, "8000", --no-access-log]
+    environment:
+      RAH_TOKEN: ${RAH_TOKEN}
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_PROVIDER_URL: ${LLM_PROVIDER_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-6-luna}
+    extra_hosts: [host.docker.internal:host-gateway]
+  sandbox-image:
+    build: {context: ., target: sandbox}
+    image: remote-agent-harness-sandbox:0.1.0
+    entrypoint: [python, -c, "print('sandbox image ready')"]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]

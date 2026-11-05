@@ -19,6 +19,9 @@ rah-codex-bridge = "rah.codex_bridge:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/rah"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"contracts" = "rah/schemas"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["docker: opt-in live Docker integration"]

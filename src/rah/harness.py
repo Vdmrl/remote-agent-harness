@@ -10,7 +10,7 @@ import uuid
 from fastapi import Header, HTTPException
 from fastapi.responses import StreamingResponse
 
-from rah.common import app_for, remote
+from rah.common import app_for, remote, validate_payload
 from rah.protocol import SYSTEM, decision
 
 app = app_for("harness")
@@ -46,6 +46,7 @@ def finish(s, op, result):
 
 @app.post("/v0/sessions")
 def provision(body: dict, x_owner: str = Header(default="")):
+    validate_payload("client-server", "provision", body)
     if not x_owner:
         raise HTTPException(403, "missing owner")
     rid = body.get("request_id")
@@ -115,6 +116,7 @@ def agent_loop(sid, s, op, body):
 
 @app.post("/v0/sessions/{sid}/runs")
 def run(sid: str, body: dict, x_owner: str = Header(default="")):
+    validate_payload("client-server", "run", body)
     s = owned(sid, x_owner)
     rid, prompt = body.get("request_id", ""), body.get("prompt", "")
     if not isinstance(rid, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,60}", rid) or not isinstance(prompt, str) or not 1 <= len(prompt) <= 20000:
@@ -181,6 +183,7 @@ def events(sid: str, after: int = 0, last_event_id: str = Header(default=""), x_
 
 @app.post("/v0/sessions/{sid}/collect")
 def collect(sid: str, body: dict, x_owner: str = Header(default="")):
+    validate_payload("client-server", "collect", body)
     owned(sid, x_owner)
     return remote(SANDBOX + f"/v0/sessions/{sid}/collect", "POST", body)
 

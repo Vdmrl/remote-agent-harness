@@ -3,6 +3,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY src ./src
+COPY contracts ./contracts
 RUN pip install --no-cache-dir uv==0.11.13 && uv sync --locked --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
 RUN useradd --uid 10001 --create-home runtime

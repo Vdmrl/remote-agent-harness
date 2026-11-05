@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rah:harness-sandbox:0",
+  "title": "Harness to sandbox manager v0",
+  "$defs": {
+    "provision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id",
+        "files"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "files": {
+          "type": "object",
+          "maxProperties": 512,
+          "additionalProperties": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        }
+      }
+    },
+    "exec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "tool"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,80}$"
+        },
+        "tool": {
+          "enum": [
+            "list",
+            "read",
+            "write",
+            "exec",
+            "collect"
+          ]
+        },
+        "args": {
+          "type": "object"
+        },
+        "timeout": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 120
+        }
+      }
+    },
+    "collect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,60}$"
+        }
+      }
+    },
+    "empty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "version",
+        "request_id",
+        "state"
+      ],
+      "properties": {
+        "version": {
+          "const": "0"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "running",
+            "finished"
+          ]
+        },
+        "result": {
+          "type": "object"
+        }
+      }
+    },
+    "collection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "maxProperties": 512,
+          "additionalProperties": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        }
+      }
+    }
+  }
+}

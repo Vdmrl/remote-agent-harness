@@ -13,7 +13,7 @@ import uuid
 import docker
 from fastapi import HTTPException
 
-from rah.common import MAX_BYTES, MAX_FILES, MAX_OUTPUT, app_for, path_ok
+from rah.common import MAX_BYTES, MAX_FILES, MAX_OUTPUT, app_for, path_ok, validate_payload
 
 app = app_for("sandbox-manager")
 sessions = {}
@@ -29,7 +29,7 @@ def fixtures(files):
         raise ValueError("fixtures must be a bounded mapping of paths to base64")
     archive, size = io.BytesIO(), 0
     with tarfile.open(fileobj=archive, mode="w") as tar:
-        for name, content in files.items():
+        for name, content in sorted(files.items()):
             path_ok(name)
             if not isinstance(content, str):
                 raise ValueError("file content must be base64")
@@ -76,6 +76,7 @@ def cleanup():
 
 @app.post("/v0/sessions")
 def provision(body: dict):
+    validate_payload("harness-sandbox", "provision", body)
     archive = fixtures(body.get("files", {}))
     sid = body.get("session_id", "")
     if not re.fullmatch(r"[a-f0-9]{32}", sid):
@@ -141,6 +142,7 @@ def execute(s, body):
 
 @app.post("/v0/sessions/{sid}/exec")
 def exec_tool(sid: str, body: dict):
+    validate_payload("harness-sandbox", "exec", body)
     s = session(sid)
     rid = body.get("request_id", "")
     if not isinstance(rid, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", rid):
@@ -179,6 +181,7 @@ def operation(sid: str, rid: str):
 
 @app.post("/v0/sessions/{sid}/collect")
 def collect(sid: str, body: dict):
+    validate_payload("harness-sandbox", "collect", body)
     return exec_tool(sid, {"request_id": body["request_id"], "tool": "collect", "timeout": 15})
 
 

@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rah:client-server:0",
+  "title": "Client to gateway/harness v0",
+  "$defs": {
+    "provision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files"
+      ],
+      "properties": {
+        "files": {
+          "type": "object",
+          "maxProperties": 512,
+          "additionalProperties": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,60}$"
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "prompt"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,60}$"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "replay": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "tool",
+              "args",
+              "text"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "tool",
+                  "final"
+                ]
+              },
+              "tool": {
+                "enum": [
+                  "list",
+                  "read",
+                  "write",
+                  "exec",
+                  "none"
+                ]
+              },
+              "args": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "collect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,60}$"
+        }
+      }
+    },
+    "empty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "version",
+        "outcome"
+      ],
+      "properties": {
+        "version": {
+          "const": "0"
+        },
+        "outcome": {
+          "enum": [
+            "running",
+            "completed",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "error": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "usage": {
+          "type": "object"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "seconds": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "version",
+        "request_id",
+        "state"
+      ],
+      "properties": {
+        "version": {
+          "const": "0"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,60}$"
+        },
+        "state": {
+          "enum": [
+            "running",
+            "finished"
+          ]
+        },
+        "result": {
+          "type": "object"
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "version",
+        "id",
+        "type",
+        "data"
+      ],
+      "properties": {
+        "version": {
+          "const": "0"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "enum": [
+            "started",
+            "model",
+            "tool",
+            "result",
+            "released"
+          ]
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

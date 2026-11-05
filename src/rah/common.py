@@ -4,8 +4,11 @@ import json
 import os
 import secrets
 from pathlib import PurePosixPath
+from pathlib import Path
+from functools import lru_cache
 
 import httpx
+from jsonschema import Draft202012Validator, ValidationError
 from fastapi import FastAPI, HTTPException, Request
 
 VERSION = "0"
@@ -23,9 +26,22 @@ def path_ok(value):
     if not isinstance(value, str) or not value or "\\" in value or "\x00" in value:
         raise ValueError("path must be relative POSIX path")
     path = PurePosixPath(value)
-    if path.is_absolute() or ".." in path.parts or value == "." or len(value) > 240:
+    if path.is_absolute() or ".." in path.parts or value == "." or path.as_posix() != value or len(value) > 240:
         raise ValueError("path escapes /work or is too long")
     return value
+
+
+@lru_cache
+def wire_schema(name):
+    root = Path(__file__).with_name("schemas")
+    if not root.exists():
+        root = Path(__file__).resolve().parents[2] / "contracts"
+    return json.loads((root / f"{name}.v0.schema.json").read_text(encoding="utf-8"))
+
+
+def validate_payload(name, kind, body):
+    schema = wire_schema(name)
+    Draft202012Validator({**schema, "$ref": f"#/$defs/{kind}"}).validate(body)
 
 
 def app_for(role):
@@ -58,12 +74,19 @@ def app_for(role):
 
     @app.get("/health")
     def health():
+        if getattr(app.state, "health", None):
+            app.state.health()
         return {"version": VERSION, "status": "ok", "service": role}
 
     @app.exception_handler(ValueError)
     async def invalid(request, exc):
         from fastapi.responses import JSONResponse
         return JSONResponse(error("validation", str(exc)), status_code=400)
+
+    @app.exception_handler(ValidationError)
+    async def invalid_schema(request, exc):
+        from fastapi.responses import JSONResponse
+        return JSONResponse(error("validation", "request does not match v0 schema"), status_code=400)
 
     return app
 

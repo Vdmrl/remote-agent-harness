@@ -18,7 +18,7 @@ def safe_path(name):
     if not isinstance(name, str) or not name or "\\" in name or "\x00" in name:
         raise ValueError("invalid path")
     rel = PurePosixPath(name)
-    if rel.is_absolute() or ".." in rel.parts or name == "." or len(name) > 240:
+    if rel.is_absolute() or ".." in rel.parts or name == "." or rel.as_posix() != name or len(name) > 240:
         raise ValueError("path must be below /work")
     path = ROOT / name
     if not path.resolve().is_relative_to(ROOT.resolve()):
@@ -30,7 +30,11 @@ def regular(path):
     info = path.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_size > FILE_LIMIT:
         raise ValueError("only bounded regular files are supported")
-    return path.read_bytes()
+    with path.open("rb") as source:
+        data = source.read(FILE_LIMIT + 1)
+    if len(data) > FILE_LIMIT:
+        raise ValueError("file too large")
+    return data
 
 
 def perform(tool, args):

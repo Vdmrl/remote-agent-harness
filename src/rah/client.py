@@ -21,7 +21,8 @@ def seed(folder):
             continue
         if not path.is_file():
             raise ValueError("fixture input accepts regular files only")
-        data = path.read_bytes()
+        with path.open("rb") as source:
+            data = source.read(65537)
         total += len(data)
         if len(data) > 65536 or total > MAX_BYTES or len(files) >= MAX_FILES:
             raise ValueError("fixture exceeds file/count/total limits")

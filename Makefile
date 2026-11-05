@@ -1,11 +1,18 @@
-# Заготовка целей. Реализация — своя.
-.PHONY: up down test-ci test-ui test-infra baf bench-fs bench-sandbox
-up:            ; docker compose up --build -d
-down:          ; docker compose down -v
-test-ci:       test-ui test-infra baf-smoke
-test-ui:       ; @echo "TODO: UI-микросценарии"
-test-infra:    ; @echo "TODO: инфраструктурные тесты (mock LLM)"
-baf-smoke:     ; @echo "TODO: по одной простой задаче на БАФ, 1 повтор"
-baf:           ; @echo "TODO: полный БАФ для PAIR=$(PAIR), 3 повтора"
-bench-fs:      ; @echo "TODO: замеры ФС через монтирование"
-bench-sandbox: ; @echo "TODO: замеры сандбокса"
+.PHONY: up down test-ci test-ui test-infra test-docker baf-smoke baf
+up:
+	docker compose up --build -d --wait
+down:
+	docker compose down -v --remove-orphans
+test-ci:
+	uv sync --locked
+	uv run pytest -m "not docker"
+test-ui:
+	uv run pytest tests/ui
+test-infra:
+	uv run pytest tests/infra -m "not docker"
+test-docker:
+	uv run pytest -m docker
+baf-smoke:
+	uv run rah-baf --tasks smoke --replay --output results/replay-smoke.jsonl
+baf:
+	uv run rah-baf --tasks all --repeat 3 --output results/baf.jsonl

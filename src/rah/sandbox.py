@@ -24,6 +24,15 @@ def engine():
     return docker.from_env(timeout=5)
 
 
+def ready():
+    client = engine()
+    client.ping()
+    client.images.get(os.environ.get("SANDBOX_IMAGE", "remote-agent-harness-sandbox:0.1.0"))
+
+
+app.state.health = ready
+
+
 def fixtures(files):
     if not isinstance(files, dict) or len(files) > MAX_FILES:
         raise ValueError("fixtures must be a bounded mapping of paths to base64")

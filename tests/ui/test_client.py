@@ -44,3 +44,12 @@ def test_fixture_seed_binary_and_limits(tmp_path):
     (tmp_path / "large").write_bytes(b"x" * 65537)
     with pytest.raises(ValueError):
         seed(tmp_path)
+
+
+def test_connect_requires_authenticated_handshake():
+    def respond(request):
+        assert request.url.path == "/v0/connect"
+        return httpx.Response(401, json={"error": {"type": "auth"}})
+    client = Client("http://server", "wrong", httpx.MockTransport(respond))
+    with pytest.raises(httpx.HTTPStatusError):
+        client.connect()

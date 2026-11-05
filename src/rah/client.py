@@ -48,7 +48,7 @@ class Client:
             return json.loads(raw)
 
     def connect(self):
-        return self.request("GET", "/health")
+        return self.request("GET", "/v0/connect")
 
     def provision(self, files=None, request_id=None):
         return self.request("POST", "/v0/sessions", {"files": files or {}, "request_id": request_id or uuid.uuid4().hex})["session_id"]
@@ -146,7 +146,6 @@ def main():
     client = Client(args.server, args.token)
     try:
         if args.command == "connect":
-            # Auth is tested by provisioning separately; health intentionally has no credentials.
             result = client.connect()
         elif args.command == "provision":
             result = {"session_id": client.provision(seed(args.fixture) if args.fixture else {})}

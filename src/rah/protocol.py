@@ -5,7 +5,7 @@ from jsonschema import validate
 DECISION_SCHEMA = {
     "type": "object", "additionalProperties": False,
     "required": ["kind", "tool", "args", "text"],
-    "properties": {"kind": {"enum": ["tool", "final"]}, "tool": {"enum": ["list", "read", "write", "exec", "none"]}, "args": {"type": "string"}, "text": {"type": "string"}},
+    "properties": {"kind": {"type": "string", "enum": ["tool", "final"]}, "tool": {"type": "string", "enum": ["list", "read", "write", "exec", "none"]}, "args": {"type": "string"}, "text": {"type": "string"}},
 }
 SYSTEM = """You are a remote coding agent. Decide only the NEXT tool call or final answer.
 All task files live in /work inside an isolated Linux Python container. You cannot use any other tools.
@@ -19,11 +19,16 @@ Do not claim execution; request a tool and wait for its result. No network. No t
 
 def decision(value):
     validate(value, DECISION_SCHEMA)
+    if len(value["args"]) > 90000 or len(value["text"]) > 20000:
+        raise ValueError("decision too large")
+    if value["kind"] == "final":
+        if value["tool"] != "none":
+            raise ValueError("final decision requires tool none")
+        value["args"] = "{}"
+        return {}
     args = json.loads(value["args"])
     if not isinstance(args, dict):
         raise ValueError("tool args must be a JSON object")
     if value["kind"] == "tool" and value["tool"] == "none":
         raise ValueError("tool decision requires a tool")
-    if len(value["args"]) > 90000 or len(value["text"]) > 20000:
-        raise ValueError("decision too large")
     return args

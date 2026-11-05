@@ -58,7 +58,8 @@
                 "enum": [
                   "tool",
                   "final"
-                ]
+                ],
+                "type": "string"
               },
               "tool": {
                 "enum": [
@@ -67,7 +68,8 @@
                   "write",
                   "exec",
                   "none"
-                ]
+                ],
+                "type": "string"
               },
               "args": {
                 "type": "string"

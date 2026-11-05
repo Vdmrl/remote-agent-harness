@@ -10,7 +10,7 @@ from rah.client import Client, seed
 
 def launch(server="http://localhost:8080", token=""):
     root = tk.Tk()
-    root.title("Remote Agent Harness · checkpoint one")
+    root.title("Remote Agent Harness")
     root.geometry("840x640")
     root.columnconfigure(1, weight=1)
     root.rowconfigure(5, weight=1)
@@ -18,14 +18,14 @@ def launch(server="http://localhost:8080", token=""):
     for row, label, variable in [(0, "Server", server_var), (1, "Client token", token_var)]:
         ttk.Label(root, text=label).grid(row=row, column=0, padx=8, pady=5, sticky="w")
         ttk.Entry(root, textvariable=variable, show="*" if row == 1 else "").grid(row=row, column=1, padx=8, sticky="ew")
-    ttk.Label(root, text="Fixture upload seeds /work. Remote folder mounting is checkpoint two.").grid(row=2, column=0, columnspan=2, padx=8, sticky="w")
+    ttk.Label(root, text="Uploaded files are temporary. Download artifacts before closing or cancelling.").grid(row=2, column=0, columnspan=2, padx=8, sticky="w")
     prompt = tk.Text(root, height=5, wrap="word")
     prompt.grid(row=3, column=0, columnspan=2, padx=8, pady=8, sticky="ew")
     buttons = ttk.Frame(root)
     buttons.grid(row=4, column=0, columnspan=2, sticky="w")
     output = tk.Text(root, state="disabled", wrap="word")
     output.grid(row=5, column=0, columnspan=2, padx=8, pady=8, sticky="nsew")
-    messages, state = queue.Queue(), {"session": None, "client": None, "busy": False}
+    messages, state = queue.Queue(), {"session": None, "client": None, "busy": False, "connecting": False}
     def log(value):
         messages.put(str(value))
     def background(action):
@@ -36,12 +36,23 @@ def launch(server="http://localhost:8080", token=""):
                 log("Error: " + str(exc))
         threading.Thread(target=work, daemon=True).start()
     def connect():
+        if state["client"] or state["connecting"]:
+            log("Already connected or connecting.")
+            return
+        state["connecting"] = True
         address, secret = server_var.get(), token_var.get()
         def action():
             client = Client(address, secret)
-            sid = client.provision()
-            state.update(client=client, session=sid)
-            log("Connected. Session " + sid)
+            try:
+                client.connect()
+                sid = client.provision()
+                state.update(client=client, session=sid)
+                log("Connected. Session " + sid)
+            except Exception:
+                client.close()
+                raise
+            finally:
+                state["connecting"] = False
         background(action)
     def upload():
         folder = filedialog.askdirectory(title="Select fixture folder (bounded upload)")
@@ -92,7 +103,13 @@ def launch(server="http://localhost:8080", token=""):
         root.after(100, poll)
     def close():
         if state["client"] and state["session"]:
-            background(lambda: state["client"].release(state["session"]))
+            def cleanup():
+                try:
+                    state["client"].http.timeout = 10
+                    state["client"].release(state["session"])
+                finally:
+                    state["client"].close()
+            threading.Thread(target=cleanup, daemon=False).start()
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", close)
     poll()

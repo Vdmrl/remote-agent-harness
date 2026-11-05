@@ -21,6 +21,13 @@ SANDBOX = os.environ.get("SANDBOX_URL", "http://sandbox-manager:8000")
 LLM = os.environ.get("LLM_URL", "http://llm-proxy:8000")
 
 
+@app.get("/v0/connect")
+def connect(x_owner: str = Header(default="")):
+    if not x_owner:
+        raise HTTPException(403, "missing owner")
+    return {"version": "0", "status": "connected"}
+
+
 def owned(sid, owner):
     s = sessions.get(sid)
     if not s or not owner or s["owner"] != owner:
@@ -108,7 +115,12 @@ def agent_loop(sid, s, op, body):
         else:
             failure = {"type": "step_limit", "message": "40 tool decisions exhausted"}
     except HTTPException as exc:
-        failure = {"type": "transport" if exc.status_code == 502 else "sandbox", "message": "upstream operation failed; inspect status before retry"}
+        detail = exc.detail
+        while isinstance(detail, dict) and "detail" in detail:
+            detail = detail["detail"]
+        failure = detail.get("error") if isinstance(detail, dict) else None
+        if not isinstance(failure, dict):
+            failure = {"type": "transport" if exc.status_code == 502 else "sandbox", "message": "upstream operation failed; inspect status before retry"}
     except Exception:
         failure = {"type": "model", "message": "invalid model decision"}
     finish(s, op, {"outcome": outcome, "text": text, "error": failure, "usage": usage, "seconds": round(time.monotonic() - started, 3), **info})
@@ -137,6 +149,7 @@ def run(sid: str, body: dict, x_owner: str = Header(default="")):
             raise HTTPException(409, "session released, cancelled or busy")
         op = {"version": "0", "request_id": rid, "state": "running", "fingerprint": fingerprint}
         s["operations"][rid] = op
+        s["result"] = None
         emit(s, "started", {"request_id": rid})
         threading.Thread(target=agent_loop, args=(sid, s, op, body), daemon=True).start()
     return {k: v for k, v in op.items() if k != "fingerprint"}

@@ -2,9 +2,10 @@ FROM python:3.12.12-slim-bookworm AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir uv==0.11.13 && uv sync --locked --no-dev --no-install-project
 COPY src ./src
 COPY contracts ./contracts
-RUN pip install --no-cache-dir uv==0.11.13 && uv sync --locked --no-dev
+RUN uv sync --locked --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
 RUN useradd --uid 10001 --create-home runtime
 USER 10001:10001

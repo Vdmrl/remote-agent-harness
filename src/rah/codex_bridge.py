@@ -19,6 +19,8 @@ DISABLED = ["shell_tool", "apps", "plugins", "multi_agent", "browser_use", "comp
 def parse_events(output, model):
     final, usage = None, {}
     for line in output.splitlines():
+        if not line.strip():
+            continue
         event = json.loads(line)
         item = event.get("item", {})
         if item and item.get("type") not in {"agent_message", "reasoning"}:
@@ -26,11 +28,13 @@ def parse_events(output, model):
         if event.get("type") in {"error", "turn.failed"}:
             raise ValueError("Codex inference failed")
         if event.get("type") == "item.completed" and item.get("type") == "agent_message":
-            final = json.loads(item["text"])
+            # CLI may emit plain-text progress before its schema-constrained final message.
+            final = item["text"]
         if event.get("type") == "turn.completed":
             usage = event.get("usage", {})
     if final is None:
         raise ValueError("Codex returned no structured decision")
+    final = json.loads(final)
     decision(final)
     return {"decision": final, "model": model, "provider": "codex-bridge", "usage": usage, "synthetic": False}
 
@@ -70,6 +74,8 @@ def infer(messages):
                 time.sleep(.1)
             if process.returncode:
                 raise ValueError("Codex inference failed (check local login and model access)")
+        if (root / "events").stat().st_size + (root / "errors").stat().st_size > MAX_BODY:
+            raise ValueError("Codex inference output limit exceeded")
         return parse_events((root / "events").read_text(encoding="utf-8"), model)
 
 

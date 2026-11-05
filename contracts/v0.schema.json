@@ -3,15 +3,170 @@
   "$id": "urn:rah:wire:0",
   "title": "RAH v0 envelopes",
   "$defs": {
-    "error": {"type": "object", "required": ["type", "message"], "properties": {"type": {"enum": ["auth", "version", "validation", "tool", "command", "timeout", "cancelled", "sandbox", "transport", "output_limit", "model", "step_limit"]}, "message": {"type": "string"}}},
-    "decision": {
-      "type": "object", "additionalProperties": false,
-      "required": ["kind", "tool", "args", "text"],
-      "properties": {"kind": {"enum": ["tool", "final"]}, "tool": {"enum": ["list", "read", "write", "exec", "none"]}, "args": {"type": "string", "description": "JSON-encoded tool arguments"}, "text": {"type": "string"}}
+    "error": {
+      "type": "object",
+      "required": [
+        "type",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "auth",
+            "version",
+            "validation",
+            "tool",
+            "command",
+            "timeout",
+            "cancelled",
+            "sandbox",
+            "transport",
+            "output_limit",
+            "model",
+            "step_limit"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
     },
-    "provision": {"type": "object", "required": ["files"], "additionalProperties": false, "properties": {"files": {"type": "object", "maxProperties": 512, "additionalProperties": {"type": "string", "contentEncoding": "base64"}}, "request_id": {"type": "string"}}},
-    "run": {"type": "object", "required": ["request_id", "prompt"], "additionalProperties": false, "properties": {"request_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,80}$"}, "prompt": {"type": "string", "minLength": 1, "maxLength": 20000}, "replay": {"type": "array", "maxItems": 40, "items": {"$ref": "#/$defs/decision"}}}},
-    "operation": {"type": "object", "required": ["version", "request_id", "state"], "properties": {"version": {"const": "0"}, "request_id": {"type": "string"}, "state": {"enum": ["running", "finished"]}, "result": {"type": "object"}}},
-    "event": {"type": "object", "required": ["version", "id", "type", "data"], "properties": {"version": {"const": "0"}, "id": {"type": "integer", "minimum": 1}, "type": {"enum": ["started", "model", "tool", "result", "released"]}, "data": {"type": "object"}}}
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "tool",
+        "args",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "tool",
+            "final"
+          ],
+          "type": "string"
+        },
+        "tool": {
+          "enum": [
+            "list",
+            "read",
+            "write",
+            "exec",
+            "none"
+          ],
+          "type": "string"
+        },
+        "args": {
+          "type": "string",
+          "description": "JSON-encoded tool arguments"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "provision": {
+      "type": "object",
+      "required": [
+        "files"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "files": {
+          "type": "object",
+          "maxProperties": 512,
+          "additionalProperties": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        },
+        "request_id": {
+          "type": "string"
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "request_id",
+        "prompt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,80}$"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "replay": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "$ref": "#/$defs/decision"
+          }
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "version",
+        "request_id",
+        "state"
+      ],
+      "properties": {
+        "version": {
+          "const": "0"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "running",
+            "finished"
+          ]
+        },
+        "result": {
+          "type": "object"
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "version",
+        "id",
+        "type",
+        "data"
+      ],
+      "properties": {
+        "version": {
+          "const": "0"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "enum": [
+            "started",
+            "model",
+            "tool",
+            "result",
+            "released"
+          ]
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    }
   }
 }

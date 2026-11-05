@@ -1,0 +1,12 @@
+{
+  "runtime_revision": "a69161e5d5ef1922314d7f813223dc265a282a77",
+  "checkout_revision_at_finish": "5311fe52e6fe928e192366bc5668746e57398dca",
+  "provider": "mock",
+  "model": "offline-replay",
+  "synthetic": true,
+  "tasks": 15,
+  "passed": 15,
+  "seconds_sum": 83.658,
+  "command": "uv run rah-baf --replay --tasks all --output results/replay-final.jsonl",
+  "finished_utc": "2026-11-05T15:15:21.827912+00:00"
+}

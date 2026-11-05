@@ -1,0 +1,40 @@
+{
+  "recorded_at_utc": "2026-11-05T15:38:59.790379+00:00",
+  "kind": "initial_complete_development_quality_run",
+  "model": "gpt-6-luna",
+  "provider": "bridge",
+  "synthetic": false,
+  "codex_cli_version": "0.166.0-alpha.6",
+  "reasoning_effort": "CLI default, not explicitly overridden",
+  "runtime_revision": "a69161e5d5ef1922314d7f813223dc265a282a77",
+  "external_bridge_revision": "5311fe52e6fe928e192366bc5668746e57398dca",
+  "client_runner_revision": "9bd63e9bc594563fb1ad2e72ae37a027d58804f4",
+  "command": "uv run rah-baf --tasks all --repeat 1 --output results/luna-real.jsonl --evidence results/luna-evidence",
+  "tasks": 15,
+  "passed": 13,
+  "seconds_sum": 691.716,
+  "reported_usage": {
+    "input_tokens": 911428,
+    "output_tokens": 5057,
+    "cached_input_tokens": 460544,
+    "reasoning_output_tokens": 2203
+  },
+  "usage_caveat": "Provider-stage failure B1.2 supplied no usage; aggregate is reported usage, not complete billed usage.",
+  "failed": [
+    {
+      "task": "B1.2",
+      "outcome": "failed",
+      "reason": "non-completed outcome: failed; missing answer.txt"
+    },
+    {
+      "task": "B4.3",
+      "outcome": "completed",
+      "reason": "bytes differ in prices.csv"
+    }
+  ],
+  "course_eligibility": "Not confirmed. AA v5.0.1 Luna Max28 is below current DeepSeek Flash Max33; this is development evidence.",
+  "sources": [
+    "https://artificialanalysis.ai/models/gpt-6-luna",
+    "https://artificialanalysis.ai/models/deepseek-v4-1-flash-1017"
+  ]
+}

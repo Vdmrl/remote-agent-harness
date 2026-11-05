@@ -21,7 +21,7 @@ lock = threading.RLock()
 
 
 def engine():
-    return docker.from_env(timeout=5)
+    return docker.from_env(timeout=30)
 
 
 def ready():
@@ -31,6 +31,26 @@ def ready():
 
 
 app.state.health = ready
+
+
+def create_container(sid):
+    client = engine()
+    name = "rah-" + sid
+    try:
+        return client.containers.run(os.environ.get("SANDBOX_IMAGE", "remote-agent-harness-sandbox:0.1.0"), detach=True, name=name,
+            user="10001:10001", network_mode="none", read_only=True, cap_drop=["ALL"], security_opt=["no-new-privileges:true"],
+            mem_limit="256m", memswap_limit="256m", nano_cpus=1_000_000_000, pids_limit=64,
+            tmpfs={"/work": "rw,noexec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700", "/tmp": "rw,noexec,nosuid,nodev,size=8m,uid=10001,gid=10001,mode=0700"},
+            labels={"rah.sandbox": "checkpoint-one"}, environment={"PYTHONDONTWRITEBYTECODE": "1"})
+    except Exception as exc:
+        # A create response can time out after Docker created the named container.
+        try:
+            client.containers.get(name).remove(force=True)
+        except docker.errors.NotFound:
+            pass
+        except Exception:
+            raise HTTPException(502, {"error": {"type": "sandbox", "message": "creation/cleanup outcome unknown; manager restart reaps labeled containers"}}) from exc
+        raise HTTPException(502, {"error": {"type": "sandbox", "message": "container creation failed; no command retried"}}) from exc
 
 
 def fixtures(files):
@@ -96,11 +116,7 @@ def provision(body: dict):
             if sessions[sid]["fingerprint"] != fingerprint:
                 raise HTTPException(409, "session id reused with different fixtures")
             return {"version": "0", "session_id": sid}
-        container = engine().containers.run(os.environ.get("SANDBOX_IMAGE", "remote-agent-harness-sandbox:0.1.0"), detach=True, name="rah-" + sid,
-            user="10001:10001", network_mode="none", read_only=True, cap_drop=["ALL"], security_opt=["no-new-privileges:true"],
-            mem_limit="256m", memswap_limit="256m", nano_cpus=1_000_000_000, pids_limit=64,
-            tmpfs={"/work": "rw,noexec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700", "/tmp": "rw,noexec,nosuid,nodev,size=8m,uid=10001,gid=10001,mode=0700"},
-            labels={"rah.sandbox": "checkpoint-one"}, environment={"PYTHONDONTWRITEBYTECODE": "1"})
+        container = create_container(sid)
         value = {"container": container, "operations": {}, "fingerprint": fingerprint, "removed": False, "busy": False}
         sessions[sid] = value
         try:

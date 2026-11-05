@@ -2,6 +2,7 @@ import base64
 import io
 import tarfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -61,3 +62,15 @@ def test_manager_idempotency_and_error_result(monkeypatch):
     with pytest.raises(Exception) as caught:
         sandbox.exec_tool("s", {**body, "tool": "list"})
     assert caught.value.status_code == 409
+
+
+def test_ambiguous_create_failure_cleans_named_container(monkeypatch):
+    removed = []
+    def fail(*args, **kwargs):
+        raise TimeoutError("create response lost")
+    containers = SimpleNamespace(run=fail, get=lambda name: SimpleNamespace(remove=lambda force: removed.append((name, force))))
+    monkeypatch.setattr(sandbox, "engine", lambda: SimpleNamespace(containers=containers))
+    with pytest.raises(Exception) as caught:
+        sandbox.create_container("a" * 32)
+    assert caught.value.status_code == 502
+    assert removed == [("rah-" + "a" * 32, True)]

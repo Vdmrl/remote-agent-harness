@@ -74,3 +74,23 @@ def test_ambiguous_create_failure_cleans_named_container(monkeypatch):
         sandbox.create_container("a" * 32)
     assert caught.value.status_code == 502
     assert removed == [("rah-" + "a" * 32, True)]
+
+
+def test_failed_fixture_seed_does_not_cache_success(monkeypatch):
+    monkeypatch.setattr(sandbox, "sessions", {})
+    created, removed = [], []
+
+    def create(sid):
+        created.append(sid)
+        return SimpleNamespace(remove=lambda force: removed.append(sid))
+
+    monkeypatch.setattr(sandbox, "create_container", create)
+    monkeypatch.setattr(sandbox, "execute", lambda *_: {"error": {"type": "tool"}} if len(created) == 1 else {})
+    sid = "a" * 32
+    body = {"session_id": sid, "files": {"input": "aGVsbG8="}}
+    with pytest.raises(Exception) as caught:
+        sandbox.provision(body)
+    assert caught.value.status_code == 502 and removed == [sid]
+    assert sandbox.provision(body)["session_id"] == sid
+    assert sandbox.provision(body)["session_id"] == sid
+    assert created == [sid, sid]

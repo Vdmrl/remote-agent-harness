@@ -118,7 +118,6 @@ def provision(body: dict):
             return {"version": "0", "session_id": sid}
         container = create_container(sid)
         value = {"container": container, "operations": {}, "fingerprint": fingerprint, "removed": False, "busy": False}
-        sessions[sid] = value
         try:
             # Docker archive upload rejects a read-only rootfs even for a tmpfs target.
             # Seed via our nonroot in-container worker in bounded argument batches.
@@ -137,6 +136,7 @@ def provision(body: dict):
         except Exception as exc:
             destroy(value)
             raise HTTPException(502, {"error": {"type": "sandbox", "message": "fixture provisioning failed"}}) from exc
+        sessions[sid] = value
     return {"version": "0", "session_id": sid}
 
 

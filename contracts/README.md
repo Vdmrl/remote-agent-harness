@@ -22,4 +22,7 @@ Restart invalidates sessions; manager startup removes this project's labeled orp
 Exactly one result event per run. Events replay after the cursor and omit prompts, tool contents and credentials.
 Cancellation removes the entire container and descendants. Its tmpfs artifacts are lost; collect before release.
 Typed error classes distinguish command, tool, timeout, sandbox, transport, cancellation and model failures.
+Model/transport errors may include an optional allowlisted `error.code`; terminal SSE/trace metadata exposes this as `error_code`.
+Examples: `bridge_cli_exit`, `bridge_final_json`, `bridge_decision_invalid`, `provider_http_error`, `provider_transport`.
+Codes identify the failing stage without including provider messages, CLI stderr, prompts or file content; unknown codes are omitted.
 HTTP validation/auth errors reject the request before an operation is started.

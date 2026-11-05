@@ -2,7 +2,7 @@ import json
 import os
 import httpx
 from fastapi import HTTPException
-from rah.common import MAX_BODY, app_for, error
+from rah.common import DIAGNOSTIC_CODES, MAX_BODY, app_for, error
 from rah.protocol import DECISION_SCHEMA, decision
 
 app = app_for("llm-proxy")
@@ -36,12 +36,29 @@ def infer(body: dict):
             for chunk in response.iter_bytes():
                 data.extend(chunk)
                 if len(data) > MAX_BODY:
-                    raise ValueError("provider response too large")
+                    raise HTTPException(502, error("model", "provider response too large", "provider_response_limit"))
             if response.is_error:
-                raise ValueError("provider rejected request")
+                code = "provider_http_error"
+                if provider == "bridge":
+                    try:
+                        detail = json.loads(data)
+                        while isinstance(detail, dict) and "detail" in detail:
+                            detail = detail["detail"]
+                        supplied = detail.get("error", {}).get("code") if isinstance(detail, dict) else None
+                        if isinstance(supplied, str) and supplied in DIAGNOSTIC_CODES:
+                            code = supplied
+                    except (ValueError, TypeError, AttributeError):
+                        pass
+                raise HTTPException(502, error("model", "provider inference failed", code))
             result = json.loads(data)
         value = result["decision"] if provider == "bridge" else json.loads(result["choices"][0]["message"]["content"])
         decision(value)
         return {"decision": value, "model": result.get("model", model), "provider": provider, "synthetic": False, "usage": result.get("usage", {})}
+    except HTTPException:
+        raise
+    except httpx.HTTPError as exc:
+        raise HTTPException(502, error("model", "provider transport failed", "provider_transport")) from exc
+    except json.JSONDecodeError as exc:
+        raise HTTPException(502, error("model", "provider returned invalid JSON", "provider_response_json")) from exc
     except Exception as exc:
-        raise HTTPException(502, error("model", "provider request or structured decision failed")) from exc
+        raise HTTPException(502, error("model", "provider structured decision failed", "provider_decision_invalid")) from exc

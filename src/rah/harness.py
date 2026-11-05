@@ -10,7 +10,7 @@ import uuid
 from fastapi import Header, HTTPException
 from fastapi.responses import StreamingResponse
 
-from rah.common import app_for, remote, validate_payload
+from rah.common import DIAGNOSTIC_CODES, app_for, remote, validate_payload
 from rah.protocol import SYSTEM, decision
 
 app = app_for("harness")
@@ -50,7 +50,8 @@ def finish(s, op, result, force=False):
             return
         op.update(state="finished", result={"version": "0", **result})
         s["result"] = op["result"]
-        emit(s, "result", {"request_id": op["request_id"], "outcome": result["outcome"], "error_type": (result.get("error") or {}).get("type"), "model": result.get("model"), "provider": result.get("provider"), "usage": result.get("usage", {}), "seconds": result.get("seconds", 0)})
+        code = (result.get("error") or {}).get("code")
+        emit(s, "result", {"request_id": op["request_id"], "outcome": result["outcome"], "error_type": (result.get("error") or {}).get("type"), "error_code": code if isinstance(code, str) and code in DIAGNOSTIC_CODES else None, "model": result.get("model"), "provider": result.get("provider"), "usage": result.get("usage", {}), "seconds": result.get("seconds", 0)})
 
 
 @app.post("/v0/sessions")
@@ -126,7 +127,7 @@ def agent_loop(sid, s, op, body):
         if not isinstance(failure, dict):
             failure = {"type": "transport" if exc.status_code == 502 else "sandbox", "message": "upstream operation failed; inspect status before retry"}
     except Exception:
-        failure = {"type": "model", "message": "invalid model decision"}
+        failure = {"type": "model", "message": "invalid model decision", "code": "harness_decision_invalid"}
     finish(s, op, {"outcome": outcome, "text": text, "error": failure, "usage": usage, "seconds": round(time.monotonic() - started, 3), **info})
 
 

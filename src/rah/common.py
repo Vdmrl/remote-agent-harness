@@ -16,10 +16,21 @@ MAX_FILES = 512
 MAX_BYTES = 2 * 1024 * 1024
 MAX_BODY = 6 * 1024 * 1024
 MAX_OUTPUT = 128 * 1024
+DIAGNOSTIC_CODES = frozenset({
+    "bridge_cli_missing", "bridge_input_limit", "bridge_timeout", "bridge_output_limit",
+    "bridge_cli_exit", "bridge_event_json", "bridge_builtin_tool", "bridge_turn_failed",
+    "bridge_no_final", "bridge_final_json", "bridge_decision_invalid", "bridge_internal",
+    "provider_http_error", "provider_transport", "provider_response_json",
+    "provider_response_limit", "provider_decision_invalid", "harness_decision_invalid",
+    "upstream_transport",
+})
 
 
-def error(kind, message):
-    return {"version": VERSION, "error": {"type": kind, "message": message}}
+def error(kind, message, code=None):
+    result = {"version": VERSION, "error": {"type": kind, "message": message}}
+    if isinstance(code, str) and code in DIAGNOSTIC_CODES:
+        result["error"]["code"] = code
+    return result
 
 
 def path_ok(value):
@@ -112,4 +123,4 @@ def remote(url, method="GET", body=None, owner=None, timeout=130):
                 raise HTTPException(response.status_code, result)
             return result
     except (httpx.HTTPError, json.JSONDecodeError) as exc:
-        raise HTTPException(502, error("transport", "upstream unavailable; query operation status before retry")) from exc
+        raise HTTPException(502, error("transport", "upstream unavailable; query operation status before retry", "upstream_transport")) from exc

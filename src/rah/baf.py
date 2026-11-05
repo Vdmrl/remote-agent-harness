@@ -10,6 +10,7 @@ import uuid
 import yaml
 from rah.baf_checks import check
 from rah.client import Client, seed
+from rah.common import DIAGNOSTIC_CODES
 
 
 def tasks(root):
@@ -49,10 +50,12 @@ def run_one(client, task, directory, repeat, replay=False, evidence=None):
                 client.release(sid)
             except Exception:
                 passed, reason = False, reason + "; release failed"
+    code = (result.get("error") or {}).get("code")
     return {"version": "0", "task": task["id"], "repeat": repeat, "pass": passed, "reason": reason,
             "usage": result.get("usage", {}), "seconds": round(time.monotonic() - started, 3), "outcome": outcome,
             "provider": result.get("provider", "unknown"), "model": result.get("model", "unknown"),
-            "synthetic": bool(replay or result.get("synthetic")), "session_id": sid}
+            "synthetic": bool(replay or result.get("synthetic")), "session_id": sid,
+            "error_type": (result.get("error") or {}).get("type"), "error_code": code if isinstance(code, str) and code in DIAGNOSTIC_CODES else None}
 
 
 def main():

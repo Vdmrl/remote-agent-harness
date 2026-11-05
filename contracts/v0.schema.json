@@ -28,6 +28,30 @@
         },
         "message": {
           "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "bridge_builtin_tool",
+            "bridge_cli_exit",
+            "bridge_cli_missing",
+            "bridge_decision_invalid",
+            "bridge_event_json",
+            "bridge_final_json",
+            "bridge_input_limit",
+            "bridge_internal",
+            "bridge_no_final",
+            "bridge_output_limit",
+            "bridge_timeout",
+            "bridge_turn_failed",
+            "harness_decision_invalid",
+            "provider_decision_invalid",
+            "provider_http_error",
+            "provider_response_json",
+            "provider_response_limit",
+            "provider_transport",
+            "upstream_transport"
+          ]
         }
       }
     },

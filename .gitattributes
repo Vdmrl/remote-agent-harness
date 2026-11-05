@@ -1,0 +1,2 @@
+* text=auto eol=lf
+baf/**/fixture/** -text

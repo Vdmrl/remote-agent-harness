@@ -38,6 +38,10 @@ def regular(path):
 
 
 def perform(tool, args):
+    if tool == "seed":
+        for name, content in args["files"].items():
+            perform("write", {"path": name, "content": content, "encoding": "base64"})
+        return {"files": len(args["files"])}
     if tool == "list":
         entries = []
         for path in ROOT.rglob("*"):

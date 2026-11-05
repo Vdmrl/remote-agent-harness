@@ -104,10 +104,23 @@ def provision(body: dict):
         value = {"container": container, "operations": {}, "fingerprint": fingerprint, "removed": False, "busy": False}
         sessions[sid] = value
         try:
-            container.put_archive("/work", archive)
-        except Exception:
+            # Docker archive upload rejects a read-only rootfs even for a tmpfs target.
+            # Seed via our nonroot in-container worker in bounded argument batches.
+            batch = {}
+            for name, content in sorted(body.get("files", {}).items()):
+                if batch and len(json.dumps({**batch, name: content})) > 89000:
+                    seeded = execute(value, {"tool": "seed", "args": {"files": batch}, "timeout": 15})
+                    if seeded.get("error"):
+                        raise ValueError("fixture worker failed")
+                    batch = {}
+                batch[name] = content
+            if batch:
+                seeded = execute(value, {"tool": "seed", "args": {"files": batch}, "timeout": 15})
+                if seeded.get("error"):
+                    raise ValueError("fixture worker failed")
+        except Exception as exc:
             destroy(value)
-            raise
+            raise HTTPException(502, {"error": {"type": "sandbox", "message": "fixture provisioning failed"}}) from exc
     return {"version": "0", "session_id": sid}
 
 
@@ -116,7 +129,7 @@ def execute(s, body):
     if not isinstance(timeout, (int, float)) or not 0.1 <= timeout <= 120:
         raise ValueError("timeout must be 0.1..120 seconds")
     tool = body.get("tool")
-    if tool not in {"list", "read", "write", "exec", "collect"}:
+    if tool not in {"list", "read", "write", "exec", "collect", "seed"}:
         raise ValueError("unknown tool")
     payload = base64.b64encode(json.dumps({"tool": tool, "args": body.get("args", {})}).encode()).decode()
     if len(payload) > 120000:

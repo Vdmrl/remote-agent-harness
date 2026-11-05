@@ -8,6 +8,6 @@ Send streams event metadata and shows the terminal result; Cancel removes the co
 CLI: `uv run rah provision --fixture ./fixture`, then `uv run rah send SESSION "task" --wait`.
 Use `events SESSION --after CURSOR`, `status SESSION REQUEST_ID`, `result SESSION`, `trace SESSION`,
 `download SESSION ./artifacts`, `cancel SESSION`, `release SESSION`.
-`connect` checks health; provision validates authentication and creates a sandbox.
+`connect` checks the authenticated handshake; provision creates a sandbox.
 Token environment variables avoid putting secrets into shell history.
 Fixture upload is not mounting a local folder. Real remote mounting is checkpoint two.

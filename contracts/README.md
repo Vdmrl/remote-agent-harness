@@ -2,9 +2,11 @@
 
 All non-health requests require `Authorization: Bearer TOKEN` and `X-Schema-Version: 0`.
 Only the gateway is exposed. Each client token owns its sessions; internal services use a distinct service token.
-See `v0.schema.json` for versioned envelopes and the generated service `/openapi.json` for route models (authenticated).
+The two machine-readable entrypoints are `client-server.v0.schema.json` and `harness-sandbox.v0.schema.json`.
+Validate an explicit operation definition using `$ref: #/$defs/provision` (or run/exec/collect/result/operation/event as applicable).
+Incoming provision/run/exec/collect requests are validated before effects. `v0.schema.json` contains shared legacy envelope definitions; these schema libraries require an explicit definition reference, not validation against an unconstrained root.
 
-Client API: `POST /v0/sessions` with `{files: {relative/path: base64}, request_id: optional-id}`; `POST /v0/sessions/{sid}/runs` with `{request_id,prompt,replay?}`;
+Client API: authenticated `GET /v0/connect`; `POST /v0/sessions` with `{files: {relative/path: base64}, request_id: optional-id}`; `POST /v0/sessions/{sid}/runs` with `{request_id,prompt,replay?}`;
 `GET .../operations/{request_id}`; `GET .../events?after=cursor` (or Last-Event-ID); `GET .../result`; `GET .../trace`;
 `POST .../collect` with `{request_id}`; `POST .../cancel`; `POST .../release`.
 

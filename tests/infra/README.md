@@ -1,14 +1,5 @@
-# Инфраструктурные тесты
+# Infrastructure checks
 
-С mock LLM, в CI, без внешней сети.
+`uv run pytest -m 'not docker'` is offline and covers version/auth boundaries, schemas, file validation, binary encodings, idempotency, event replay, cancellation races, bridge event parsing and all fifteen synthetic BAF checker cases.
 
-| Группа | Проверки |
-|---|---|
-| Контракты | сообщения обоих протоколов валидны по схемам, граничные случаи |
-| Инварианты | ровно один result; идемпотентность; cancel убивает дерево процессов; таймаут на каждой операции; секреты не пересекают границу |
-| Лимиты и очистка | CPU, RAM, PIDs, диск, время; после сессии нет процессов и временных ресурсов |
-| Изоляция | выход за workdir, симлинки наружу, canary-секрет, fork bomb, заполнение диска, запись в ro |
-| Сеть | разрешённое доступно, запрещённое заблокировано, обход невозможен |
-| Сбои | обрыв монтирования, обрыв клиента, падение харнеса посреди команды, ретраи |
-| Сессии | продолжение в новой сессии, параллельные сессии не мешают друг другу |
-| Синхронизация | правки видны в обе стороны; конфликт одновременной правки обрабатывается по ADR |
+`uv run pytest -m docker` explicitly selects live tests against an already running default-mock Compose stack. Set RAH_CLIENT_TOKEN and optionally RAH_SERVER first. It checks actual container settings, path/symlink errors, nonzero exit, binary collect, deduplication, timeout and child-process cancellation/removal. Docker Desktop tests use its Linux Engine pipe on Windows; Linux uses /var/run/docker.sock.

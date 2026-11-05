@@ -1,14 +1,8 @@
-# ADR
+# Architecture decisions
 
-Обязательный минимум (A-10):
+- [0001 Own Python harness](0001-own-harness.md): accepted.
+- [0002 Docker sandbox boundary](0002-docker-sandboxes.md): accepted for trusted development.
+- [0003 HTTP/SSE and in-memory sessions](0003-protocols-sessions.md): accepted for checkpoint one.
+- [0004 Remote mounting comparison](0004-mounting.md): proposed for checkpoint two.
 
-- [ ] харнес
-- [ ] сандбокс и способ его запуска (Docker socket / rootless / sysbox / gVisor …)
-- [ ] транспорт клиент ↔ сервер
-- [ ] транспорт харнес ↔ сандбокс
-- [ ] механизм монтирования (сравнение минимум с двумя альтернативами)
-- [ ] модель сессий
-- [ ] сетевая политика
-- [ ] выбор пары «харнес + LLM» по БАФ
-
-Устаревшие ADR не удалять — помечать `superseded`.
+Accepted records describe implementation choices; executed checks are recorded separately in [report.md](../report.md).

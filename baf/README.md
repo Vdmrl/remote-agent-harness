@@ -1,29 +1,5 @@
-# БАФ — базисные агентские функции
+# Course BAF tasks
 
-Атомарные функции пары «харнес + LLM»: чтение, поиск, создание, редактирование, использование инструмента, генерация кода, рассуждение, синтез. Инфраструктура (сессии, сеть, сбои, синхронизация, изоляция) сюда не входит — она в `tests/infra/`.
+`catalog.yaml` remains the imported course catalog. Checkpoint one materializes B1–B5 in `tasks/`: fifteen fixture/prompt/hidden-checker cases. The original B1-read example remains preserved. `materialize.py` regenerates the checkpoint cases.
 
-Курсовой набор — в [`catalog.yaml`](catalog.yaml) (8 БАФ × 3 задачи + 3 составные). Полностью оформленный пример — [`B1-read/B1.1-service-port`](B1-read/B1.1-service-port). Остальные задачи оформляются по тому же образцу.
-
-## Формат задачи
-
-```
-baf/<БАФ>/<задача>/
-├── task.yaml    # id, baf, level, prompt (одно или несколько сообщений), timeout_s, answer_file
-├── fixture/     # исходное содержимое workdir — копируется в чистую папку перед запуском
-└── check.py     # программный чекер: получает путь к итоговой папке, печатает JSON {"pass": bool, "reason": str}
-```
-
-Правила:
-- чекер смотрит на **итоговое состояние** (файлы, их содержимое, для Б6 — скрытые тесты), а не на текст ответа модели;
-- одна задача — одна функция, укладывается в минуты;
-- каждая задача стартует с чистой копией фикстуры;
-- скрытые тесты и эталоны не лежат в `fixture/` — агент их не видит.
-
-## Режимы прогона
-
-| Режим | Состав | Повторы | Где |
-|---|---|---|---|
-| smoke-БАФ | `level: simple`, по одной на БАФ | 1 | CI: «отработало, файл создан, ничего не сломалось» |
-| полный | все задачи курса + свои + составные | 3 | тесты на качество, сравнение пар |
-
-Результат прогона — `results/baf/<pair>/<timestamp>.jsonl`: `task_id, repeat, pass, reason, tokens_in, tokens_out, seconds, outcome`.
+Run `uv run rah-baf --tasks all --replay` against the default-mock stack for synthetic infrastructure evidence, or omit --replay with a real provider for quality evidence. Real providers never receive replays/checkers/expected outputs. See docs/baf.md for protocols, limits, outcomes and artifact evidence.

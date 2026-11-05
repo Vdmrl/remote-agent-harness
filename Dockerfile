@@ -11,7 +11,7 @@ CMD ["uvicorn", "rah.gateway:app", "--host", "0.0.0.0", "--port", "8000", "--no-
 
 FROM python:3.12.12-slim-bookworm AS sandbox
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-COPY src/rah /opt/rah
+COPY src/rah/__init__.py src/rah/worker.py /opt/rah/
 ENV PYTHONPATH=/opt
 USER 10001:10001
 WORKDIR /work

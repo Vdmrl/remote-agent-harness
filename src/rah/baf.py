@@ -39,13 +39,19 @@ def run_one(client, task, directory, repeat, replay=False, evidence=None):
         if evidence:
             target = Path(evidence) / f"{task['id']}-{repeat}-{sid}"
             target.mkdir(parents=True, exist_ok=True)
-            trace = client.request("GET", f"/v0/sessions/{sid}/trace")
-            (target / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
             (target / "artifacts.json").write_text(json.dumps({k: base64.b64encode(v).decode() for k, v in files.items()}, indent=2), encoding="utf-8")
     except Exception as exc:
         reason = f"{type(exc).__name__}: {str(exc)[:240]}"
     finally:
         if sid:
+            if evidence:
+                try:
+                    target = Path(evidence) / f"{task['id']}-{repeat}-{sid}"
+                    target.mkdir(parents=True, exist_ok=True)
+                    trace = client.request("GET", f"/v0/sessions/{sid}/trace")
+                    (target / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
+                except Exception:
+                    passed, reason = False, reason + "; trace unavailable"
             try:
                 client.release(sid)
             except Exception:

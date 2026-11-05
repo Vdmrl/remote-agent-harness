@@ -74,3 +74,13 @@ def test_real_provider_rejects_synthetic_replay(monkeypatch):
 def test_decision_args_must_be_object():
     with pytest.raises(ValueError):
         decision({"kind": "tool", "tool": "exec", "args": "[]", "text": ""})
+
+
+def test_exec_completion_cannot_win_after_cancel_requested():
+    s = {"cancelled": True, "events": [], "result": None}
+    op = {"request_id": "race", "state": "running"}
+    harness.finish(s, op, {"outcome": "failed", "error": {"type": "sandbox", "message": "container removed"}})
+    assert op["state"] == "running"
+    harness.finish(s, op, {"outcome": "cancelled", "error": {"type": "cancelled", "message": "removed"}})
+    assert op["result"]["outcome"] == "cancelled"
+    assert len(s["events"]) == 1

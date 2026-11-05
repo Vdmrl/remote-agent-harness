@@ -42,9 +42,11 @@ def emit(s, kind, data):
         return event
 
 
-def finish(s, op, result):
+def finish(s, op, result, force=False):
     with lock:
         if op["state"] == "finished":
+            return
+        if s["cancelled"] and result["outcome"] != "cancelled" and not force:
             return
         op.update(state="finished", result={"version": "0", **result})
         s["result"] = op["result"]
@@ -106,6 +108,8 @@ def agent_loop(sid, s, op, body):
                 text, outcome = value["text"], "completed"
                 break
             result = remote(SANDBOX + f"/v0/sessions/{sid}/exec", "POST", {"request_id": f"{op['request_id']}-{step}", "tool": value["tool"], "args": args, "timeout": 30})
+            if s["cancelled"]:
+                return
             observation = result.get("result", {})
             emit(s, "tool", {"step": step, "tool": value["tool"], "error_type": (observation.get("error") or {}).get("type"), "exit_code": observation.get("exit_code")})
             messages.append({"role": "user", "content": "Tool observation: " + json.dumps(observation)})
@@ -204,8 +208,14 @@ def collect(sid: str, body: dict, x_owner: str = Header(default="")):
 @app.post("/v0/sessions/{sid}/cancel")
 def cancel(sid: str, x_owner: str = Header(default="")):
     s = owned(sid, x_owner)
-    s["cancelled"] = True
-    result = remote(SANDBOX + f"/v0/sessions/{sid}/cancel", "POST", {})
+    with lock:
+        s["cancelled"] = True
+    try:
+        result = remote(SANDBOX + f"/v0/sessions/{sid}/cancel", "POST", {})
+    except Exception:
+        for op in s["operations"].values():
+            finish(s, op, {"outcome": "failed", "error": {"type": "sandbox", "message": "cancellation removal failed; container status unknown"}, "usage": {}}, force=True)
+        raise
     for op in s["operations"].values():
         finish(s, op, {"outcome": "cancelled", "error": {"type": "cancelled", "message": "sandbox removed; tmpfs artifacts lost"}, "usage": {}})
     return result

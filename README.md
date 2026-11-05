@@ -1,6 +1,6 @@
 # Remote Agent Harness
 
-A Python agent loop with a desktop/CLI client and disposable Docker tool sandboxes, implementing checkpoint one of course track A. The harness owns model messages, next-tool decisions, execution, observations and terminal results. Task commands execute exclusively inside containers.
+A custom Python agent harness for remote tool execution in disposable Docker sandboxes. It includes desktop and CLI clients, versioned protocols, session traces and reproducible evaluations. The harness owns model messages, tool decisions, observations and terminal results.
 
 `client → gateway → harness → llm-proxy → model` and `harness → sandbox-manager → Docker sandbox`.
 Only the manager sees the Docker socket. Only the gateway publishes a port. See [ADRs](docs/adr/README.md) and [contracts](contracts/README.md).

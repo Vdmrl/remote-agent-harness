@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "tool",
+    "tool": "list",
+    "args": "{}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"countries.yaml\", \"content\": \"bm9yd2F5OiAnTk8nCm9udGFyaW86ICdPTicK\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"postal.yaml\", \"content\": \"aG9tZTogJzAxMjMnCg==\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "final",
+    "tool": "none",
+    "args": "{}",
+    "text": "Synthetic replay completed; no model quality claim."
+  }
+]

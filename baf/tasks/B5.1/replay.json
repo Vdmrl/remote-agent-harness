@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "tool",
+    "tool": "list",
+    "args": "{}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "exec",
+    "args": "{\"command\": \"python stats.py data.csv\"}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"answer.txt\", \"content\": \"NQ==\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "final",
+    "tool": "none",
+    "args": "{}",
+    "text": "Synthetic replay completed; no model quality claim."
+  }
+]

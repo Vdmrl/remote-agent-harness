@@ -1,0 +1,7 @@
+{
+  "kind": "build",
+  "outputs": {
+    "answer.txt": "bm86IGRlcGVuZGVuY3kgbWlzc2luZyAoZXhpdCAxKQo="
+  },
+  "preserve_fixture": true
+}

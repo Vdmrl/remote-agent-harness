@@ -1,0 +1,7 @@
+{
+  "kind": "answer",
+  "outputs": {
+    "answer.txt": "NQ=="
+  },
+  "preserve_fixture": true
+}

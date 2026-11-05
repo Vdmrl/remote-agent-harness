@@ -1,0 +1,3 @@
+id: B5.3
+prompt: Успешно ли отрабатывает build.sh? Запусти sh build.sh, запиши yes/no и причину
+  в answer.txt.

@@ -1,0 +1,7 @@
+{
+  "kind": "set",
+  "outputs": {
+    "failed.txt": "dGVzdF8wMwp0ZXN0XzA5CnRlc3RfMTcK"
+  },
+  "preserve_fixture": true
+}

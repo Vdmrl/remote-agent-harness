@@ -1,0 +1,3 @@
+id: B4.2
+prompt: Переименуй calc_total в compute_total во всём Python-проекте; сохрани поведение
+  и остальные файлы.

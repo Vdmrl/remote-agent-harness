@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "tool",
+    "tool": "list",
+    "args": "{}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"config.json\", \"content\": \"eyJob3N0IjoibG9jYWxob3N0IiwicG9ydCI6ODEzNywiZGVidWciOmZhbHNlfQo=\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "final",
+    "tool": "none",
+    "args": "{}",
+    "text": "Synthetic replay completed; no model quality claim."
+  }
+]

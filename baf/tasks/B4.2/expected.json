@@ -1,0 +1,8 @@
+{
+  "kind": "rename",
+  "outputs": {
+    "calc.py": "ZGVmIGNvbXB1dGVfdG90YWwoaXRlbXMpOgogICAgcmV0dXJuIHN1bShpdGVtcykK",
+    "app.py": "ZnJvbSBjYWxjIGltcG9ydCBjb21wdXRlX3RvdGFsCmRlZiBydW4oKToKICAgIHJldHVybiBjb21wdXRlX3RvdGFsKFsxLCAyLCAzXSkK"
+  },
+  "preserve_fixture": true
+}

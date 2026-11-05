@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "tool",
+    "tool": "list",
+    "args": "{}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"answer.txt\", \"content\": \"c3JjL2RhdGV1dGlsLnB5\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "final",
+    "tool": "none",
+    "args": "{}",
+    "text": "Synthetic replay completed; no model quality claim."
+  }
+]

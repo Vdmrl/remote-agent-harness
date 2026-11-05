@@ -1,0 +1,28 @@
+{
+  "kind": "json",
+  "outputs": {
+    "config.json": "eyJob3N0IjoibG9jYWxob3N0IiwicG9ydCI6ODEzNywiZGVidWciOmZhbHNlfQo="
+  },
+  "preserve_fixture": true,
+  "schema": {
+    "type": "object",
+    "required": [
+      "host",
+      "port",
+      "debug"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "host": {
+        "const": "localhost"
+      },
+      "port": {
+        "type": "integer",
+        "const": 8137
+      },
+      "debug": {
+        "const": false
+      }
+    }
+  }
+}

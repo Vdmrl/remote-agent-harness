@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "tool",
+    "tool": "list",
+    "args": "{}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"calc.py\", \"content\": \"ZGVmIGNvbXB1dGVfdG90YWwoaXRlbXMpOgogICAgcmV0dXJuIHN1bShpdGVtcykK\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"app.py\", \"content\": \"ZnJvbSBjYWxjIGltcG9ydCBjb21wdXRlX3RvdGFsCmRlZiBydW4oKToKICAgIHJldHVybiBjb21wdXRlX3RvdGFsKFsxLCAyLCAzXSkK\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "final",
+    "tool": "none",
+    "args": "{}",
+    "text": "Synthetic replay completed; no model quality claim."
+  }
+]

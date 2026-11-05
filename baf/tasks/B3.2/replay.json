@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "tool",
+    "tool": "list",
+    "args": "{}",
+    "text": ""
+  },
+  {
+    "kind": "tool",
+    "tool": "write",
+    "args": "{\"path\": \"report.csv\", \"content\": \"ZGF0ZSxhbW91bnQKMjAyNi0wMS0wMywxMQoyMDI2LTAyLTEwLDQKMjAyNi0wMy0wMiw3Cg==\", \"encoding\": \"base64\"}",
+    "text": ""
+  },
+  {
+    "kind": "final",
+    "tool": "none",
+    "args": "{}",
+    "text": "Synthetic replay completed; no model quality claim."
+  }
+]

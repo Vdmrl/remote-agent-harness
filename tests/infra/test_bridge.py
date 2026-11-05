@@ -9,7 +9,7 @@ def test_bridge_structured_usage_and_tool_rejection():
     assert parse_events(stream, "gpt-6-luna")["usage"] == {"input_tokens": 12}
     with pytest.raises(ValueError):
         parse_events(json.dumps({"type": "item.started", "item": {"type": "command_execution", "command": "ls"}}), "gpt-6-luna")
-    assert {"shell_tool", "apps", "plugins", "multi_agent"}.issubset(DISABLED)
+    assert {"shell_tool", "apps", "plugins", "multi_agent", "view_image", "browser_use_external"}.issubset(DISABLED)
 
 
 def test_final_unused_empty_args_are_normalized():

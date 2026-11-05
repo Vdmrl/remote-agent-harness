@@ -13,7 +13,7 @@ import uvicorn
 from rah.common import MAX_BODY, app_for, error
 from rah.protocol import DECISION_SCHEMA, decision
 
-DISABLED = ["shell_tool", "apps", "plugins", "multi_agent", "browser_use", "computer_use", "image_generation", "skill_search"]
+DISABLED = ["shell_tool", "apps", "plugins", "multi_agent", "browser_use", "browser_use_external", "computer_use", "image_generation", "view_image", "skill_search"]
 
 
 def parse_events(output, model):
@@ -54,6 +54,7 @@ def infer(messages):
         command = [executable, "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "-m", model, "--json", "--output-schema", str(schema)]
         for feature in DISABLED:
             command.extend(["--disable", feature])
+        command.extend(["-c", "web_search=disabled"])
         command.append("-")
         prompt = ("You are an inference-only adapter. Return only the next structured decision based on the supplied conversation. "
                   "Never inspect your cwd or execute the task. Never use built-in tools, apps, plugins, shell, network, subagents, or skills. "
